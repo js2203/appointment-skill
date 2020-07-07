@@ -5,21 +5,17 @@ import caldav
 import os
 
 class Appointment(MycroftSkill):
-    """
-    calendars, today, principal, client = None, None, None, None
-    url = 'https://next.social-robot.info/nc/remote.php/dav'
-    username, password = '', ''
-    """
+
     def __init__(self):
         MycroftSkill.__init__(self)
         try:
-            with open((os.path.join(os.path.join(__file__, '..'), 'conf.txt'))) as json_file:
+            with open((os.path.join(os.path.dirname(__file__), 'conf.json'))) as json_file:
                 data = json.load(json_file)
-                self.url = data['URL']
+                self.url = data['url']
                 self.username = data['username']
                 self.password = data['password']
         except ImportError:
-            print(ImportError)
+            self.log.info(ImportError)
 
         self.today = datetime.combine(datetime.today(), time(0, 0))
         self.client = caldav.DAVClient(url=self.url, username=self.username, password=self.password)
