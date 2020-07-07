@@ -5,11 +5,11 @@ import caldav
 
 
 class Appointment(MycroftSkill):
-
+    """
     calendars, today, principal, client = None, None, None, None
     url = 'https://next.social-robot.info/nc/remote.php/dav'
     username, password = '', ''
-
+    """
     def __init__(self):
         MycroftSkill.__init__(self)
         try:
@@ -40,7 +40,7 @@ class Appointment(MycroftSkill):
         else:
             eventTime = e.dtstart.value.strftime("%d %B, %Y at %H:%M")
 
-        return {"eventTime": eventTime, "eventSummary": eventSummary, "eventSummary": e.summary.value}
+        return {"eventTime": eventTime, "eventSummary": eventSummary, "eventLocation": eventLocation}
 
     @intent_file_handler('appointment.intent')
     def handle_appointment(self, message):
@@ -51,7 +51,7 @@ class Appointment(MycroftSkill):
 
         event_data = self.handleEvent(events[0])
 
-        self.speak_dialog('appointment', data={"date": event_data["eventTime"],"summary": event_data["eventSummary"], "location": event_data["eventSummary"]})
+        self.speak_dialog('appointment', data={"date": event_data["eventTime"],"summary": event_data["eventSummary"], "location": event_data["eventLocation"]})
 
 
 def create_skill():
