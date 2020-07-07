@@ -2,7 +2,7 @@ from mycroft import MycroftSkill, intent_file_handler
 from datetime import datetime, timedelta, time
 import json
 import caldav
-
+import os
 
 class Appointment(MycroftSkill):
     """
@@ -13,7 +13,7 @@ class Appointment(MycroftSkill):
     def __init__(self):
         MycroftSkill.__init__(self)
         try:
-            with open('conf.txt') as json_file:
+            with open((os.path.join(os.path.join(__file__, '..'), 'conf.txt'))) as json_file:
                 data = json.load(json_file)
                 self.url = data['URL']
                 self.username = data['username']
