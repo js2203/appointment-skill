@@ -55,13 +55,21 @@ class Appointment(MycroftSkill):
 
         if len(self.calendars) > 0:
             calendar = self.calendars[0]
+
+            # search for all events that happen in the future, one could specify the end to reduce the load
             events = calendar.date_search(self.today, end=None)
             for event in events:
                 event.load()
                 e = event.instance.vevent
-                event_array.append(e)
+
+                # only add an event if it occurs at an later time than the query, not including already running events
+                if e.dtstart.value.strftime("%D, %H:%M") > self.today.strftime("%D, %H:%M"):
+                    event_array.append(e)
+
+            # sort the events, because they are separated in allday and normal events at first
             event_array.sort(key=sort_events)
 
+        # the first event in the array is the next occurring
         event_data = handle_event(events[0])
 
         self.speak_dialog('appointment', data={"date": event_data["event_time"], "summary": event_data["event_summary"],
