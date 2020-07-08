@@ -6,20 +6,18 @@ import os
 
 
 def handle_event(event):
-    event.load()
-    e = event.instance.vevent
     try:
-        event_location = e.location.value
+        event_location = event.location.value
     except AttributeError:
         event_location = 'Unknown'
-    event_summary = e.summary.value
+    event_summary = event.summary.value
 
-    if e.dtstart.value.strftime("%H:%M") == "00:00" and e.dtend.value.strftime("%H:%M") == "00:00":
+    if e.dtstart.value.strftime("%H:%M") == "00:00" and event.dtend.value.strftime("%H:%M") == "00:00":
         day = e.dtstart.value.strftime("%d %B, %Y")
         event_time = ("an allday event at {}".format(day))
     else:
-        event_start = e.dtstart.value.strftime("%H:%M, %D")
-        event_end = e.dtend.value.strftime("%H:%M, %D")
+        event_start = event.dtstart.value.strftime("%H:%M, %D")
+        event_end = event.dtend.value.strftime("%H:%M, %D")
         event_time = ("a normal event from {} to {}".format(event_start, event_end))
 
     return {"event_time": event_time, "event_summary": event_summary, "event_location": event_location}
