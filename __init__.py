@@ -12,8 +12,8 @@ def handle_event(event):
         event_location = 'Unknown'
     event_summary = event.summary.value
 
-    if e.dtstart.value.strftime("%H:%M") == "00:00" and event.dtend.value.strftime("%H:%M") == "00:00":
-        day = e.dtstart.value.strftime("%d %B, %Y")
+    if event.dtstart.value.strftime("%H:%M") == "00:00" and event.dtend.value.strftime("%H:%M") == "00:00":
+        day = event.dtstart.value.strftime("%d %B, %Y")
         event_time = ("an allday event at {}".format(day))
     else:
         event_start = event.dtstart.value.strftime("%H:%M, %D")
