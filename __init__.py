@@ -70,7 +70,7 @@ class Appointment(MycroftSkill):
             event_array.sort(key=sort_events)
 
         # the first event in the array is the next occurring
-        event_data = handle_event(events[0])
+        event_data = handle_event(event_array[0])
 
         self.speak_dialog('appointment', data={"date": event_data["event_time"], "summary": event_data["event_summary"],
                                                "location": event_data["event_location"]})
