@@ -148,7 +148,7 @@ class Appointment(MycroftSkill):
         name = message.data.get('name')
         time = message.data.get('time')
         date = message.data.get('date')
-        self.speak('{}, {}, {}').format(name, time, date)
+        self.speak('{}, {}, {}'.format(name, time, date))
 
 def create_skill():
     """
