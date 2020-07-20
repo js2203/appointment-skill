@@ -103,8 +103,8 @@ class Appointment(MycroftSkill):
         self.calendars = self.principal.calendars()
         self.today = datetime
 
-    @intent_file_handler('next-next-appointment.intent')
-    def handle_appointment(self):
+    @intent_file_handler('next-appointment.intent')
+    def handle_appointment_get(self):
         """Returns the next appointment in the calendar.
 
         If the correct intent is spoken by the user, all entries
@@ -142,6 +142,13 @@ class Appointment(MycroftSkill):
                                                     "summary": event_data["event_summary"],
                                                     "location": event_data["event_location"]})
 
+    @intent_file_handler('create.appointment')
+    def handle_appointment_create(self, message):
+
+        name = message.data.get('name')
+        time = message.data.get('time')
+        date = message.data.get('date')
+        self.speak(name, time, date)
 
 def create_skill():
     """
