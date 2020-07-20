@@ -142,13 +142,13 @@ class Appointment(MycroftSkill):
                                                     "summary": event_data["event_summary"],
                                                     "location": event_data["event_location"]})
 
-    @intent_file_handler('create.appointment')
+    @intent_file_handler('create.appointment.intent')
     def handle_appointment_create(self, message):
 
         name = message.data.get('name')
         time = message.data.get('time')
         date = message.data.get('date')
-        self.speak(name, time, date)
+        self.speak('{}, {}, {}').format(name, time, date)
 
 def create_skill():
     """
