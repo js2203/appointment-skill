@@ -154,13 +154,20 @@ class Appointment(MycroftSkill):
 
         utterance = message.data['utterance']
 
-        start_date = [None] * 2
         start_date = extract_datetime(utterance, datetime.now(), self.lang)
         while start_date is None:
             utterance = self.get_response("new.event.date")
             start_date = extract_datetime(utterance, datetime.now(), self.lang)
 
-        self.log.info("Calendar skill new event: date: " + str(start_date[0]) + " event: " + name)
+        if not self.check_for_time(start_date):
+            time = None
+            while self.check_for_time(time) is False:
+                time = self.get_response("new.event.time")
+                time, _ = extract_datetime(time)
+
+            date = datetime.datetime.combine(start_date.date(), time.time())
+
+        self.log.info("Calendar skill new event: date: " + date + " event: " + name)
 
 
 def create_skill():
