@@ -152,8 +152,9 @@ class Appointment(MycroftSkill):
         while not name:
             name = self.get_response("new.event.name")
 
-        start_date, rest = extract_datetime(message.data['utterance'], datetime.now(), self.lang)
-        while rest == normalize(message.data['utterance']):
+        utterance = message.data['utterance']
+        start_date, rest = extract_datetime(utterance, datetime.now(), self.lang)
+        while rest == normalize(utterance):
             utterance = self.get_response("new.event.date")
             start_date, rest = extract_datetime(utterance, datetime.now(), self.lang)
 
