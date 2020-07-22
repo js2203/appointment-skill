@@ -12,9 +12,12 @@ examples.
 """
 import os
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 import caldav
 from mycroft import MycroftSkill, intent_file_handler
+from mycroft.util.parse import extract_datetime, normalize
+from mycroft.util.format import nice_time, nice_date, nice_date_time
+from mycroft.util.time import to_local, now_local
 
 
 def handle_event(event):
@@ -146,9 +149,15 @@ class Appointment(MycroftSkill):
     def handle_appointment_create(self, message):
 
         name = message.data.get('name')
-        time = message.data.get('time')
-        date = message.data.get('date')
-        self.speak('{}, {}, {}'.format(name, time, date))
+        while not name:
+            name = self.get_response("new.event.name")
+
+        start_date, rest = extract_datetime(message.data['utterance'], datetime.datetime.now(), self.lang)
+        while rest == normalize(message.data['utterance']):
+            utterance = self.get_response("new.event.date")
+            start_date, rest = extract_datetime(utterance, datetime.datetime.now(), self.lang)
+
+        self.log.info("Calendar skill new event: date: " + str(start_date) + " event: " + name)
 
 def create_skill():
     """
