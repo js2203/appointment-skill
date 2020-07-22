@@ -152,12 +152,13 @@ class Appointment(MycroftSkill):
         while not name:
             name = self.get_response("new.event.name")
 
-        start_date, rest = extract_datetime(message.data['utterance'], datetime.datetime.now(), self.lang)
+        start_date, rest = extract_datetime(message.data['utterance'], datetime.now(), self.lang)
         while rest == normalize(message.data['utterance']):
             utterance = self.get_response("new.event.date")
-            start_date, rest = extract_datetime(utterance, datetime.datetime.now(), self.lang)
+            start_date, rest = extract_datetime(utterance, datetime.now(), self.lang)
 
         self.log.info("Calendar skill new event: date: " + str(start_date) + " event: " + name)
+
 
 def create_skill():
     """
