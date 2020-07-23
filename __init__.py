@@ -161,8 +161,8 @@ class Appointment(MycroftSkill):
 
         self.log.info(start_date[0])
 
-        if start_date.time() == time(0):
-            all_day = self.ask_yesno()
+        if start_date[0].time() == time(0):
+            all_day = self.ask_yesno('new.event.allday')
             if all_day == 'yes':
                 end_date = (start_date + timedelta(day=1)).strftime("%Y%m%dT%H%M%SZ"),
             else:
