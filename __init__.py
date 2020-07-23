@@ -156,23 +156,34 @@ class Appointment(MycroftSkill):
 
         start_date = extract_datetime(utterance, datetime.now(), self.lang)
         while start_date is None:
-            utterance = self.get_response("new.event.date")
-            start_date = extract_datetime(utterance, datetime.now(), self.lang)
-
-        self.log.info(start_date[0])
+            try:
+                utterance = self.get_response("new.event.date")
+                start_date = extract_datetime(utterance, datetime.now(), self.lang)
+            except ValueError:
+                pass
 
         if start_date[0].time() == time(0):
             all_day = self.ask_yesno('new.event.allday')
             if all_day == 'yes':
-                end_date = (start_date[0] + timedelta(day=1)).strftime("%Y%m%dT%H%M%SZ"),
+                end_date = (start_date[0] + timedelta(days=1)),
             else:
                 start_time = None
                 while start_time is None:
-                    utterance = self.get_response("new.event.time")
-                    start_time = extract_datetime(utterance, datetime.now(), self.lang)
+                    try:
+                        utterance = self.get_response("new.event.time")
+                        start_time = extract_datetime(utterance, datetime.now(), self.lang)
+                    except ValueError:
+                        pass
                 start_date[0] = datetime.combine(start_date[0].date(), start_time.time())
+        else:
+            while end_date is None:
+                try:
+                    utterance = self.get_response("new.event.time")
+                    end_date, rest = extract_datetime(utterance, start_date[0], self.lang)
+                except ValueError:
+                    pass
 
-        self.speak('Created {} at {} for {} hours'.format(name, start_date[0], end_date))
+        self.speak('Created {} at {} for {} hours'.format(name, start_date[0], end_date[0]))
 
 
 def create_skill():
