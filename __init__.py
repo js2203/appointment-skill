@@ -164,15 +164,15 @@ class Appointment(MycroftSkill):
         if start_date[0].time() == time(0):
             all_day = self.ask_yesno('new.event.allday')
             if all_day == 'yes':
-                end_date = (start_date + timedelta(day=1)).strftime("%Y%m%dT%H%M%SZ"),
+                end_date = (start_date[0] + timedelta(day=1)).strftime("%Y%m%dT%H%M%SZ"),
             else:
                 start_time = None
                 while start_time is None:
                     utterance = self.get_response("new.event.time")
                     start_time = extract_datetime(utterance, datetime.now(), self.lang)
-                start_date = datetime.combine(start_date.date(), start_time.time())
+                start_date[0] = datetime.combine(start_date[0].date(), start_time.time())
 
-        self.speak('Created {} at {} for {} hours'.format(name, start_date, end_date))
+        self.speak('Created {} at {} for {} hours'.format(name, start_date[0], end_date))
 
 
 def create_skill():
