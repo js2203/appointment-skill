@@ -162,19 +162,26 @@ class Appointment(MycroftSkill):
             except ValueError:
                 pass
 
+        start_time = None
+        end_date = None
         if start_date[0].time() == time(0):
             all_day = self.ask_yesno('new.event.allday')
             if all_day == 'yes':
                 end_date = (start_date[0] + timedelta(days=1)),
             else:
-                start_time = None
                 while start_time is None:
                     try:
                         utterance = self.get_response("new.event.time")
-                        start_time = extract_datetime(utterance, datetime.now(), self.lang)
+                        start_time, rest = extract_datetime(utterance, datetime.now(), self.lang)
                     except ValueError:
                         pass
                 start_date[0] = datetime.combine(start_date[0].date(), start_time.time())
+                while end_date is None:
+                    try:
+                        utterance = self.get_response("new.event.time")
+                        end_date, rest = extract_datetime(utterance, start_date[0], self.lang)
+                    except ValueError:
+                        pass
         else:
             while end_date is None:
                 try:
