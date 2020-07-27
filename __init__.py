@@ -177,7 +177,7 @@ class Appointment(MycroftSkill):
                         pass
                 """
                 start_time = self.get_time("new.event.time", datetime.now())
-                start_date = datetime.combine(start_date[0].date(), start_time.time())
+                start_date = datetime.combine(start_date.date(), start_time.time())
                 end_date = self.get_time("new.event.end", start_date)
                 """
                 while end_date is None:
@@ -201,7 +201,7 @@ class Appointment(MycroftSkill):
         self.speak('Created {} at {} for {} hours'.format(name, start_date, end_date))
 
     @intent_file_handler('delete_appointment.intent')
-    def handle_appointment_create(self, message):
+    def handle_appointment_delete(self, message):
 
         name = message.data.get('name')
         while not name:
