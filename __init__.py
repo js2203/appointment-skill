@@ -106,7 +106,7 @@ class Appointment(MycroftSkill):
         self.calendars = self.principal.calendars()
         self.today = datetime
 
-    @intent_file_handler('next.appointment.intent')
+    @intent_file_handler('next_appointment.intent')
     def handle_appointment_next(self):
         """Returns the next appointment in the calendar.
 
@@ -145,7 +145,7 @@ class Appointment(MycroftSkill):
                                                     "summary": event_data["event_summary"],
                                                     "location": event_data["event_location"]})
 
-    @intent_file_handler('create.appointment.intent')
+    @intent_file_handler('create_appointment.intent')
     def handle_appointment_create(self, message):
 
         name = message.data.get('name')
@@ -200,7 +200,7 @@ class Appointment(MycroftSkill):
 
         self.speak('Created {} at {} for {} hours'.format(name, start_date, end_date))
 
-    @intent_file_handler('delete.appointment.intent')
+    @intent_file_handler('delete_appointment.intent')
     def handle_appointment_create(self, message):
 
         name = message.data.get('name')
