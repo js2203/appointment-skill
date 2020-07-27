@@ -1,2 +1,4 @@
-(Create | Make) an appointment for me called {name}.
-(Create | Make) an appointment for me.
+(Create | Make) a new appointment for me called {name}.
+(Create | Make) a new appointment for me.
+(Create | Make) a new event.
+(Create | Make) a new event called {name}.
