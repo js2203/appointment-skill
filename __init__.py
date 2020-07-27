@@ -207,7 +207,10 @@ class Appointment(MycroftSkill):
         while not name:
             name = self.get_response("new.event.name")
 
-        events = self.calendar.date_search(datetime.today())
+        if len(self.calendars) > 0:
+            calendar = self.calendars[0]
+
+        events = calendar.date_search(datetime.today())
 
         for event in events:
             event.load()
