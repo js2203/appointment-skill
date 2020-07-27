@@ -106,8 +106,8 @@ class Appointment(MycroftSkill):
         self.calendars = self.principal.calendars()
         self.today = datetime
 
-    @intent_file_handler('next-appointment.intent')
-    def handle_appointment_get(self):
+    @intent_file_handler('next.appointment.intent')
+    def handle_appointment_next(self):
         """Returns the next appointment in the calendar.
 
         If the correct intent is spoken by the user, all entries
@@ -141,7 +141,7 @@ class Appointment(MycroftSkill):
             event_array.sort(key=sort_events)
         # the first event in the array is the next occurring
         event_data = handle_event(event_array[0])
-        self.speak_dialog('next-appointment', data={"date": event_data["event_time"],
+        self.speak_dialog('next.appointment', data={"date": event_data["event_time"],
                                                     "summary": event_data["event_summary"],
                                                     "location": event_data["event_location"]})
 
@@ -219,7 +219,7 @@ class Appointment(MycroftSkill):
                 event.delete()
                 self.speak("deleted " + e.summary)
 
-    def get_time(self, dialog, start):
+    def get_time(self, dialog: str, start: datetime) -> datetime:
         spoken_date = None
         while spoken_date is None:
             try:
