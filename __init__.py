@@ -123,7 +123,7 @@ class Appointment(MycroftSkill):
         event_array = []
         self.today = datetime.today()
 
-        if len(self.calendars) > 0:
+        if len(self.calendars) >= 0:
             calendar = self.calendars[0]
             # search for all events that happen in the future,
             # one could specify the end to reduce the load.
@@ -165,7 +165,9 @@ class Appointment(MycroftSkill):
         else:
             end_date = self.get_time("new.event.end", start_date)
 
-        self.calendar.save_event("""BEGIN:VCALENDAR
+        if len(self.calendars) >= 0:
+            calendar = self.calendars[0]
+            calendar.save_event("""BEGIN:VCALENDAR
                         VERSION:2.0
                         PRODID:SI2020js
                         BEGIN:VEVENT
@@ -199,7 +201,8 @@ class Appointment(MycroftSkill):
         for event in events:
             event.load()
             e = event.instance.vevent
-            if e.summary == name:
+            summary: str = e.summary
+            if summary.lower() == name:
                 event.delete()
                 self.speak("deleted " + e.summary)
 
