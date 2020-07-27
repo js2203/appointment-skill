@@ -152,45 +152,79 @@ class Appointment(MycroftSkill):
         while not name:
             name = self.get_response("new.event.name")
 
-        utterance = message.data['utterance']
-
-        start_date = extract_datetime(utterance, datetime.now(), self.lang)
+        """
+        start_date, rest = extract_datetime(utterance, datetime.now(), self.lang)
         while start_date is None:
             try:
                 utterance = self.get_response("new.event.date")
                 start_date = extract_datetime(utterance, datetime.now(), self.lang)
             except ValueError:
                 pass
+        """
+        start_date = self.get_time("new.event.date", datetime.now())
 
-        start_time = None
-        end_date = None
-        if start_date[0].time() == time(0):
+        if start_date.time() == time(0):
             all_day = self.ask_yesno('new.event.allday')
             if all_day == 'yes':
-                end_date = (start_date[0] + timedelta(days=1)),
+                end_date = (start_date + timedelta(days=1)),
             else:
+                """
                 while start_time is None:
                     try:
                         utterance = self.get_response("new.event.time")
                         start_time, rest = extract_datetime(utterance, datetime.now(), self.lang)
                     except ValueError:
                         pass
-                start_date[0] = datetime.combine(start_date[0].date(), start_time.time())
+                """
+                start_time = self.get_time("new.event.time", datetime.now())
+                start_date = datetime.combine(start_date[0].date(), start_time.time())
+                end_date = self.get_time("new.event.end", start_date)
+                """
                 while end_date is None:
                     try:
-                        utterance = self.get_response("new.event.time")
+                        utterance = self.get_response("new.event.end")
                         end_date, rest = extract_datetime(utterance, start_date[0], self.lang)
                     except ValueError:
                         pass
+                """
         else:
+            """
             while end_date is None:
                 try:
                     utterance = self.get_response("new.event.time")
                     end_date, rest = extract_datetime(utterance, start_date[0], self.lang)
                 except ValueError:
                     pass
+            """
+            end_date = self.get_time("new.event.end", start_date)
 
-        self.speak('Created {} at {} for {} hours'.format(name, start_date[0], end_date[0]))
+        self.speak('Created {} at {} for {} hours'.format(name, start_date, end_date))
+
+    @intent_file_handler('delete.appointment.intent')
+    def handle_appointment_create(self, message):
+
+        name = message.data.get('name')
+        while not name:
+            name = self.get_response("new.event.name")
+
+        events = self.calendar.date_search(datetime.today())
+
+        for event in events:
+            event.load()
+            e = event.instance.vevent
+            if e.summary == name:
+                event.delete()
+                self.speak("deleted " + e.summary)
+
+    def get_time(self, dialog, start):
+        spoken_date = None
+        while spoken_date is None:
+            try:
+                utterance = self.get_response(dialog)
+                spoken_date, rest = extract_datetime(utterance, start, self.lang)
+            except ValueError:
+                pass
+        return spoken_date
 
 
 def create_skill():
