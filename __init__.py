@@ -147,20 +147,11 @@ class Appointment(MycroftSkill):
 
     @intent_file_handler('create_appointment.intent')
     def handle_appointment_create(self, message):
-
+        self.log.debug('create')
         name = message.data.get('name')
         while not name:
             name = self.get_response("new.event.name")
 
-        """
-        start_date, rest = extract_datetime(utterance, datetime.now(), self.lang)
-        while start_date is None:
-            try:
-                utterance = self.get_response("new.event.date")
-                start_date = extract_datetime(utterance, datetime.now(), self.lang)
-            except ValueError:
-                pass
-        """
         start_date = self.get_time("new.event.date", datetime.now())
 
         if start_date.time() == time(0):
@@ -168,41 +159,34 @@ class Appointment(MycroftSkill):
             if all_day == 'yes':
                 end_date = (start_date + timedelta(days=1)),
             else:
-                """
-                while start_time is None:
-                    try:
-                        utterance = self.get_response("new.event.time")
-                        start_time, rest = extract_datetime(utterance, datetime.now(), self.lang)
-                    except ValueError:
-                        pass
-                """
                 start_time = self.get_time("new.event.time", datetime.now())
                 start_date = datetime.combine(start_date.date(), start_time.time())
                 end_date = self.get_time("new.event.end", start_date)
-                """
-                while end_date is None:
-                    try:
-                        utterance = self.get_response("new.event.end")
-                        end_date, rest = extract_datetime(utterance, start_date[0], self.lang)
-                    except ValueError:
-                        pass
-                """
         else:
-            """
-            while end_date is None:
-                try:
-                    utterance = self.get_response("new.event.time")
-                    end_date, rest = extract_datetime(utterance, start_date[0], self.lang)
-                except ValueError:
-                    pass
-            """
             end_date = self.get_time("new.event.end", start_date)
 
-        self.speak('Created {} at {} for {} hours'.format(name, start_date, end_date))
+        self.calendar.save_event("""BEGIN:VCALENDAR
+                        VERSION:2.0
+                        PRODID:SI2020js
+                        BEGIN:VEVENT
+                        UID:{}
+                        DTSTAMP:{}
+                        DTSTART:{}
+                        DTEND:{}
+                        SUMMARY:{}
+                        END:VEVENT
+                        END:VCALENDAR
+                        """.format(self.username,
+                                   datetime.now().strftime("%Y%m%dT%H%M%SZ"),
+                                   start_date.strftime("%Y%m%dT%H%M%SZ"),
+                                   end_date.strftime("%Y%m%dT%H%M%SZ"),
+                                   name))
+
+        self.speak('Created {} from {} till {}'.format(name, start_date, end_date))
 
     @intent_file_handler('delete_appointment.intent')
     def handle_appointment_delete(self, message):
-
+        self.log.debug('delete')
         name = message.data.get('name')
         while not name:
             name = self.get_response("new.event.name")
@@ -225,7 +209,7 @@ class Appointment(MycroftSkill):
             try:
                 utterance = self.get_response(dialog)
                 spoken_date, rest = extract_datetime(utterance, start, self.lang)
-            except ValueError:
+            except TypeError:
                 pass
         return spoken_date
 
