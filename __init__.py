@@ -14,6 +14,7 @@ import os
 import json
 from datetime import datetime, timedelta, time
 import caldav
+import vobject
 from mycroft import MycroftSkill, intent_file_handler
 from mycroft.util.parse import extract_datetime, normalize
 from mycroft.util.format import nice_time, nice_date, nice_date_time
@@ -123,7 +124,7 @@ class Appointment(MycroftSkill):
         event_array = []
         self.today = datetime.today()
 
-        if len(self.calendars) >= 0:
+        if len(self.calendars) > 0:
             calendar = self.calendars[0]
             # search for all events that happen in the future,
             # one could specify the end to reduce the load.
@@ -165,24 +166,14 @@ class Appointment(MycroftSkill):
         else:
             end_date = self.get_time("new.event.end", start_date)
 
-        if len(self.calendars) >= 0:
+        if len(self.calendars) > 0:
             calendar = self.calendars[0]
-            calendar.save_event("""BEGIN:VCALENDAR
-                        VERSION:2.0
-                        PRODID:SI2020js
-                        BEGIN:VEVENT
-                        UID:{}
-                        DTSTAMP:{}
-                        DTSTART:{}
-                        DTEND:{}
-                        SUMMARY:{}
-                        END:VEVENT
-                        END:VCALENDAR
-                        """.format(self.username,
-                                   datetime.now().strftime("%Y%m%dT%H%M%SZ"),
-                                   start_date.strftime("%Y%m%dT%H%M%SZ"),
-                                   end_date.strftime("%Y%m%dT%H%M%SZ"),
-                                   name))
+            cal = vobject.iCalendar()
+            cal.add("vevent")
+            cal.vevent.add("summary").value = str(name)
+            cal.vevent.add('dtstart').value = start_date
+            cal.vevent.add('dtend').value = end_date
+            calendar.add_event(str(cal.serialize()))
 
         self.speak('Created {} from {} till {}'.format(name, start_date, end_date))
 
