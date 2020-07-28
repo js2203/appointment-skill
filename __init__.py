@@ -21,56 +21,6 @@ from mycroft.util.format import nice_time, nice_date, nice_date_time
 from mycroft.util.time import to_local, now_local
 
 
-def handle_event(event):
-    """Retrieves information from an event instance.
-
-    Retrieves and handles information from an event instance if available.
-    Also converts the starting and end time in a string.
-
-    Args:
-        event:
-            A calendar event instances.
-    Returns:
-        A dictionary containing the time, summary and location
-        of the event. For example:
-        {"event_time": "01:12, 07.05.2020",
-         "event_summary": "this is an event",
-         "event_location": "home"}
-    """
-    try:
-        event_location = event.location.value
-    except AttributeError:
-        event_location = 'Unknown'
-    event_summary = event.summary.value
-
-    if event.dtstart.value.strftime("%H:%M") == "00:00" \
-            and event.dtend.value.strftime("%H:%M") == "00:00":
-        day = event.dtstart.value.strftime("%d %B, %Y")
-        event_time = ("an allday event at {}".format(day))
-    else:
-        event_start = event.dtstart.value.strftime("%H:%M, %D")
-        event_end = event.dtend.value.strftime("%H:%M, %D")
-        event_time = ("a normal event from {} to {}".format(event_start, event_end))
-
-    return {"event_time": event_time, "event_summary": event_summary,
-            "event_location": event_location}
-
-
-def sort_events(event):
-    """Returns the starting date of a calendar event instance.
-
-    Returns the starting date of a calendar event instance, that
-    a list of events can be sorted by starting dates.
-
-    Args:
-        event:
-            A calendar event instances.
-    Returns:
-        A calendar event starting date.
-    """
-    return event.dtstart.value.strftime("%D,%H:%M")
-
-
 class Appointment(MycroftSkill):
     """Summary of class here.
 
@@ -139,9 +89,9 @@ class Appointment(MycroftSkill):
                     event_array.append(event_instance)
             # sort the events, because they are separated
             # in allday and normal events at first
-            event_array.sort(key=sort_events)
+            event_array.sort(key=self.sort_events)
         # the first event in the array is the next occurring
-        event_data = handle_event(event_array[0])
+        event_data = self.handle_event(event_array[0])
         self.speak_dialog('next.appointment', data={"date": event_data["event_time"],
                                                     "summary": event_data["event_summary"],
                                                     "location": event_data["event_location"]})
@@ -151,7 +101,7 @@ class Appointment(MycroftSkill):
         self.log.debug('create')
         name = message.data.get('name')
         while not name:
-            name = self.get_response("new.event.name")
+            name = self.get_response("get.event.name")
 
         start_date = self.get_time("new.event.date", datetime.now())
 
@@ -182,7 +132,7 @@ class Appointment(MycroftSkill):
         self.log.debug('delete')
         name = message.data.get('name')
         while not name:
-            name = self.get_response("new.event.name")
+            name = self.get_response("get.event.name")
 
         if len(self.calendars) > 0:
             calendar = self.calendars[0]
@@ -192,10 +142,30 @@ class Appointment(MycroftSkill):
         for event in events:
             event.load()
             e = event.instance.vevent
-            summary: str = e.summary
+            summary: str = e.summary.value
             if summary.lower() == name:
                 event.delete()
                 self.speak("deleted " + e.summary)
+
+    @intent_file_handler('rename_appointment.intent')
+    def handle_appointment_rename(self, message):
+        self.log.debug('rename')
+        name = message.data.get('name')
+        while not name:
+            name = self.get_response("get.event.name")
+
+        while True:
+            new_name = None
+            while not new_name:
+                new_name = self.get_response("new.event.name")
+            name_correct = self.ask_yesno('new.event.name.correct', data={"name": new_name})
+            if name_correct == 'yes':
+                break
+
+        target_event = self.get_event_by_name(name, datetime.now())
+        target_event.instance.vevent.summary.value = new_name
+        target_event.save()
+        self.speak('changed name to {}'.format(new_name))
 
     def get_time(self, dialog: str, start: datetime) -> datetime:
         spoken_date = None
@@ -206,6 +176,67 @@ class Appointment(MycroftSkill):
             except TypeError:
                 pass
         return spoken_date
+
+    def get_event_by_name(self, name, search_date):
+        if len(self.calendars) > 0:
+            calendar = self.calendars[0]
+        events = calendar.date_search(search_date)
+        for event in events:
+            event.load()
+            event_instance = event.instance.vevent
+            summary: str = event_instance.summary.value
+            if summary.lower() == name.lower():
+                return event
+
+    @staticmethod
+    def handle_event(event):
+        """Retrieves information from an event instance.
+
+        Retrieves and handles information from an event instance if available.
+        Also converts the starting and end time in a string.
+
+        Args:
+            event:
+                A calendar event instances.
+        Returns:
+            A dictionary containing the time, summary and location
+            of the event. For example:
+            {"event_time": "01:12, 07.05.2020",
+             "event_summary": "this is an event",
+             "event_location": "home"}
+        """
+        try:
+            event_location = event.location.value
+        except AttributeError:
+            event_location = 'Unknown'
+        event_summary = event.summary.value
+
+        if event.dtstart.value.strftime("%H:%M") == "00:00" \
+                and event.dtend.value.strftime("%H:%M") == "00:00":
+            day = event.dtstart.value.strftime("%d %B, %Y")
+            event_time = ("an allday event at {}".format(day))
+        else:
+            event_start = event.dtstart.value.strftime("%H:%M, %D")
+            event_end = event.dtend.value.strftime("%H:%M, %D")
+            event_time = ("a normal event from {} to {}".format(event_start, event_end))
+
+        return {"event_time": event_time, "event_summary": event_summary,
+                "event_location": event_location}
+
+    @staticmethod
+    def sort_events(event):
+        """Returns the starting date of a calendar event instance.
+
+        Returns the starting date of a calendar event instance, that
+        a list of events can be sorted by starting dates.
+
+        Args:
+            event:
+                A calendar event instances.
+        Returns:
+            A calendar event starting date.
+        """
+        return event.dtstart.value.strftime("%D,%H:%M")
 
 
 def create_skill():
