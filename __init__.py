@@ -55,7 +55,6 @@ class Appointment(MycroftSkill):
         self.client = caldav.DAVClient(url=self.url, username=self.username, password=self.password)
         self.principal = self.client.principal()
         self.calendars = self.principal.calendars()
-        self.today = datetime
 
     @intent_file_handler('next_appointment.intent')
     def handle_appointment_next(self):
@@ -72,13 +71,12 @@ class Appointment(MycroftSkill):
             None
         """
         event_array = []
-        self.today = datetime.today()
 
         if len(self.calendars) > 0:
             calendar = self.calendars[0]
             # search for all events that happen in the future,
             # one could specify the end to reduce the load.
-            events = calendar.date_search(self.today, end=None)
+            events = calendar.date_search(datetime.now(), end=None)
             for event in events:
                 event.load()
                 event_instance = event.instance.vevent
@@ -99,11 +97,14 @@ class Appointment(MycroftSkill):
     @intent_file_handler('create_appointment.intent')
     def handle_appointment_create(self, message):
         self.log.debug('create')
+        """
         name = message.data.get('name')
         while not name:
             name = self.get_response("get.event.name")
+        """
+        name = self.get_data(message, 'name', 'get.event.name')
 
-        start_date = self.get_time("new.event.date", datetime.now())
+        start_date = self.get_time("new.event.date", datetime.now(), message.data.get['utterance'])
 
         if start_date.time() == time(0):
             all_day = self.ask_yesno('new.event.allday')
@@ -130,34 +131,26 @@ class Appointment(MycroftSkill):
     @intent_file_handler('delete_appointment.intent')
     def handle_appointment_delete(self, message):
         self.log.debug('delete')
+        """
         name = message.data.get('name')
         while not name:
             name = self.get_response("get.event.name")
-
-        if len(self.calendars) > 0:
-            calendar = self.calendars[0]
-
-        events = calendar.date_search(datetime.today())
-
-        for event in events:
-            event.load()
-            e = event.instance.vevent
-            summary: str = e.summary.value
-            if summary.lower() == name:
-                event.delete()
-                self.speak("deleted " + e.summary)
+        """
+        name = self.get_data(message, 'name', 'get.event.name')
+        try:
+            target_event = self.get_event_by_name(name, datetime.now())
+            target_event.delete()
+            self.speak('deleted the event {}'.format(name))
+        except ValueError:
+            self.speak('could not find the event')
 
     @intent_file_handler('rename_appointment.intent')
     def handle_appointment_rename(self, message):
         self.log.debug('rename')
-        name = message.data.get('name')
-        while not name:
-            name = self.get_response("get.event.name")
+        name = self.get_data(message, 'name', 'get.event.name')
 
         while True:
-            new_name = None
-            while not new_name:
-                new_name = self.get_response("new.event.name")
+            new_name = self.get_data(message, 'new_name', 'new.event.name')
             name_correct = self.ask_yesno('new.event.name.correct', data={"name": new_name})
             if name_correct == 'yes':
                 break
@@ -167,8 +160,23 @@ class Appointment(MycroftSkill):
         target_event.save()
         self.speak('changed name to {}'.format(new_name))
 
-    def get_time(self, dialog: str, start: datetime) -> datetime:
+    @intent_file_handler('day_appointment.intent')
+    def handle_appointment_day(self, message):
+
+        self.speak()
+
+    def get_data(self, message, data: str, dialog: str) -> str:
+        response = message.data.get(data)
+        while not response:
+            response = self.get_response(dialog)
+        return response
+
+    def get_time(self, dialog: str, start: datetime, message=None) -> datetime:
         spoken_date = None
+        try:
+            spoken_date = extract_datetime(message, start, self.lang)
+        except ValueError:
+            pass
         while spoken_date is None:
             try:
                 utterance = self.get_response(dialog)
@@ -178,6 +186,7 @@ class Appointment(MycroftSkill):
         return spoken_date
 
     def get_event_by_name(self, name, search_date):
+        calendar = None
         if len(self.calendars) > 0:
             calendar = self.calendars[0]
         events = calendar.date_search(search_date)
