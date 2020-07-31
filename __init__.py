@@ -163,6 +163,18 @@ class Appointment(MycroftSkill):
     @intent_file_handler('day_appointment.intent')
     def handle_appointment_day(self, message):
 
+        self.log.debug('day')
+        start_date = self.get_time("new.event.date", datetime.now(), message.data.get['utterance'])
+        if not start_date:
+            start_date= self.get_time("new.event.time", datetime.now())
+        
+        events = self.get_events_day(start_date)
+
+        for event in events:
+            self.speak_dialog('list.event', data={"name":event.summary.value, 
+            "start": event.dtstart.value.strftime("%D, %H:%M"),
+            "end": event.dtend.value.strftime("%D, %H:%M")  })
+
         self.speak()
 
     def get_data(self, message, data: str, dialog: str) -> str:
@@ -184,6 +196,17 @@ class Appointment(MycroftSkill):
             except TypeError:
                 pass
         return spoken_date
+
+    def get_events_day(self, search_date):
+        calendar = None
+        if len(self.calendars) > 0:
+            calendar = self.calendars[0]
+        events = calendar.date_search(search_date)
+        all_events = []
+        for event in events:
+            event.load()
+            all_events.append(event.instance.vevent)
+        return all_events
 
     def get_event_by_name(self, name, search_date):
         calendar = None
