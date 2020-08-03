@@ -96,12 +96,17 @@ class Appointment(MycroftSkill):
 
     @intent_file_handler('create_appointment.intent')
     def handle_appointment_create(self, message):
+        """
+
+
+
+        Args:
+            self:
+            message:
+        Returns:
+            None
+        """
         self.log.debug('create')
-        """
-        name = message.data.get('name')
-        while not name:
-            name = self.get_response("get.event.name")
-        """
         name = self.get_data(message, 'name', 'get.event.name')
 
         start_date = self.get_time("new.event.date", datetime.now(), message.data.get['utterance'])
@@ -130,12 +135,17 @@ class Appointment(MycroftSkill):
 
     @intent_file_handler('delete_appointment.intent')
     def handle_appointment_delete(self, message):
+        """
+
+
+
+        Args:
+            self:
+            message:
+        Returns:
+            None
+        """
         self.log.debug('delete')
-        """
-        name = message.data.get('name')
-        while not name:
-            name = self.get_response("get.event.name")
-        """
         name = self.get_data(message, 'name', 'get.event.name')
         try:
             target_event = self.get_event_by_name(name, datetime.now())
@@ -146,6 +156,16 @@ class Appointment(MycroftSkill):
 
     @intent_file_handler('rename_appointment.intent')
     def handle_appointment_rename(self, message):
+        """
+
+
+
+        Args:
+            self:
+            message:
+        Returns:
+            None
+        """
         self.log.debug('rename')
         name = self.get_data(message, 'name', 'get.event.name')
 
@@ -162,6 +182,16 @@ class Appointment(MycroftSkill):
 
     @intent_file_handler('day_appointment.intent')
     def handle_appointment_day(self, message):
+        """
+
+
+
+        Args:
+            self:
+            message:
+        Returns:
+            None
+        """
 
         self.log.debug('day')
         start_date = self.get_time("new.event.date", datetime.now(), message.data.get['utterance'])
@@ -178,12 +208,43 @@ class Appointment(MycroftSkill):
         self.speak()
 
     def get_data(self, message, data: str, dialog: str) -> str:
+        """
+
+
+
+        Args:
+            self:
+            message:
+            data:
+            dialog:
+        Returns:
+            response:
+        """
         response = message.data.get(data)
         while not response:
             response = self.get_response(dialog)
         return response
 
     def get_time(self, dialog: str, start: datetime, message=None) -> datetime:
+        """filters and returns the date and time in a message string.
+
+        Tries to filter the date and time from a message string. If no
+        date can be retrieved from the string, it asks the user for a date
+        until one can be retrieved from the message.
+
+        Args:
+            self:
+            dialog:
+                name of the .dialog file, which should be used for asking
+            start:
+                date as datetime object, for reference if user uses 
+                relative time
+            message:
+                message as string
+        Returns:
+            spoken_date:
+                datetime object with the date retrieved from the user
+        """
         spoken_date = None
         try:
             spoken_date = extract_datetime(message, start, self.lang)
@@ -197,7 +258,21 @@ class Appointment(MycroftSkill):
                 pass
         return spoken_date
 
-    def get_events_day(self, search_date):
+    def get_events_day(self, search_date: datetime) -> list:
+        """Returns all events in a calendar on a specifc day.
+
+        Retrieves all events on a given date in the calendar
+        and returns them loaded as vevent objects in a list.
+
+        Args:
+            self:
+            search_date:
+                date as datetime object for which all events should
+                be returned.
+        Returns:
+            all_events:
+                list with all events on the given date as vevent objects.
+        """
         calendar = None
         if len(self.calendars) > 0:
             calendar = self.calendars[0]
@@ -208,7 +283,23 @@ class Appointment(MycroftSkill):
             all_events.append(event.instance.vevent)
         return all_events
 
-    def get_event_by_name(self, name, search_date):
+    def get_event_by_name(self, name: str, search_date: datetime):
+        """searches for a specific event by name.
+
+        Iterates through all events in the calendar until
+        the event with the name given in args is found.
+
+        Args:
+            self:
+            name:
+                name of the desired event as string
+            search_date:
+                date as datetime object when the event takes place to reduce iterations,
+                if no date is known use datetime.now() or datetime.today().
+        Returns:
+            event:
+                vevent with the name given in args.
+        """
         calendar = None
         if len(self.calendars) > 0:
             calendar = self.calendars[0]
