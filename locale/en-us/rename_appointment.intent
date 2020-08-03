@@ -1,4 +1,3 @@
-I want to rename an (event | appointment).
-Please rename the (event | appointment) {name} for me.
-(rename | change) the (event | appointment)
-(rename | change) the (event | appointment) {name}
+I want to (rename | change) an (event | appointment).
+Please (rename | change) (the | an) (event | appointment) {name} for me.
+(rename | change) (the | an) (event | appointment) {name}

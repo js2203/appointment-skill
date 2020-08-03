@@ -82,17 +82,17 @@ class Appointment(MycroftSkill):
                 event_instance = event.instance.vevent
                 # only add an event if it occurs at an later time than the query
                 # not including already running events
-                if event_instance.dtstart.value.strftime("%D, %H:%M") \
-                        > self.today.strftime("%D, %H:%M"):
+                if event_instance.dtstart.value.strftime('%D, %H:%M') \
+                        > self.today.strftime('%D, %H:%M'):
                     event_array.append(event_instance)
             # sort the events, because they are separated
             # in allday and normal events at first
             event_array.sort(key=self.sort_events)
         # the first event in the array is the next occurring
         event_data = self.handle_event(event_array[0])
-        self.speak_dialog('next.appointment', data={"date": event_data["event_time"],
-                                                    "summary": event_data["event_summary"],
-                                                    "location": event_data["event_location"]})
+        self.speak_dialog('next.appointment', data={'date': event_data['event_time'],
+                                                    'summary': event_data['event_summary'],
+                                                    'location': event_data['event_location']})
 
     @intent_file_handler('create_appointment.intent')
     def handle_appointment_create(self, message):
@@ -109,24 +109,24 @@ class Appointment(MycroftSkill):
         self.log.debug('create')
         name = self.get_data(message, 'name', 'get.event.name')
 
-        start_date = self.get_time("new.event.date", datetime.now(), message.data.get['utterance'])
+        start_date = self.get_time('new.event.date', datetime.now(), message.data.get['utterance'])
 
         if start_date.time() == time(0):
             all_day = self.ask_yesno('new.event.allday')
             if all_day == 'yes':
-                end_date = (start_date + timedelta(days=1)),
+                end_date = (start_date + timedelta(days=1))
             else:
-                start_time = self.get_time("new.event.time", datetime.now())
+                start_time = self.get_time('new.event.time', datetime.now())
                 start_date = datetime.combine(start_date.date(), start_time.time())
-                end_date = self.get_time("new.event.end", start_date)
+                end_date = self.get_time('new.event.end', start_date)
         else:
-            end_date = self.get_time("new.event.end", start_date)
+            end_date = self.get_time('new.event.end', start_date)
 
         if len(self.calendars) > 0:
             calendar = self.calendars[0]
             cal = vobject.iCalendar()
-            cal.add("vevent")
-            cal.vevent.add("summary").value = str(name)
+            cal.add('vevent')
+            cal.vevent.add('summary').value = str(name)
             cal.vevent.add('dtstart').value = start_date
             cal.vevent.add('dtend').value = end_date
             calendar.add_event(str(cal.serialize()))
@@ -171,7 +171,7 @@ class Appointment(MycroftSkill):
 
         while True:
             new_name = self.get_data(message, 'new_name', 'new.event.name')
-            name_correct = self.ask_yesno('new.event.name.correct', data={"name": new_name})
+            name_correct = self.ask_yesno('new.event.name.correct', data={'name': new_name})
             if name_correct == 'yes':
                 break
 
@@ -194,17 +194,15 @@ class Appointment(MycroftSkill):
         """
 
         self.log.debug('day')
-        start_date = self.get_time("new.event.date", datetime.now(), message.data.get['utterance'])
+        start_date = self.get_time('new.event.date', datetime.now(), message.data.get['utterance'])
         if not start_date:
-            start_date= self.get_time("new.event.time", datetime.now())
-        
+            start_date = self.get_time('new.event.time', datetime.now())
         events = self.get_events_day(start_date)
-
         for event in events:
-            self.speak_dialog('list.event', data={"name":event.summary.value, 
-            "start": event.dtstart.value.strftime("%D, %H:%M"),
-            "end": event.dtend.value.strftime("%D, %H:%M")  })
-
+            self.speak_dialog('list.event',
+                              data={'name': event.summary.value,
+                                    'start': event.dtstart.value.strftime('%D, %H:%M'),
+                                    'end': event.dtend.value.strftime('%D, %H:%M')})
         self.speak()
 
     def get_data(self, message, data: str, dialog: str) -> str:
@@ -237,7 +235,7 @@ class Appointment(MycroftSkill):
             dialog:
                 name of the .dialog file, which should be used for asking
             start:
-                date as datetime object, for reference if user uses 
+                date as datetime object, for reference if user uses
                 relative time
             message:
                 message as string
@@ -283,7 +281,7 @@ class Appointment(MycroftSkill):
             all_events.append(event.instance.vevent)
         return all_events
 
-    def get_event_by_name(self, name: str, search_date: datetime):
+    def get_event_by_name(self, name: str, search_date: datetime, calendar=None):
         """searches for a specific event by name.
 
         Iterates through all events in the calendar until
@@ -296,11 +294,12 @@ class Appointment(MycroftSkill):
             search_date:
                 date as datetime object when the event takes place to reduce iterations,
                 if no date is known use datetime.now() or datetime.today().
+            calendar:
         Returns:
             event:
                 vevent with the name given in args.
         """
-        calendar = None
+
         if len(self.calendars) > 0:
             calendar = self.calendars[0]
         events = calendar.date_search(search_date)

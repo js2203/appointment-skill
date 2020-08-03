@@ -1,4 +1,4 @@
-(Delete | Remove) an appointment called {name}.
-(Delete | Remove) an appointment for me.
-(Delete | Remove) an appointment called {name} for me.
-(Delete | Remove) appointment.
+(Delete | Remove) an (appointment | event) called {name}.
+(Delete | Remove) an (appointment | event) for me.
+(Delete | Remove) an (appointment | event) called {name} for me.
+(Delete | Remove) (appointment | event).
