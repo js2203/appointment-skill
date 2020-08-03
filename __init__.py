@@ -145,7 +145,7 @@ class Appointment(MycroftSkill):
         Returns:
             None
         """
-        self.log.debug('delete')
+        self.log.info('delete')
         name = self.get_data(message, 'name', 'get.event.name')
         try:
             target_event = self.get_event_by_name(name, datetime.now())
@@ -166,7 +166,7 @@ class Appointment(MycroftSkill):
         Returns:
             None
         """
-        self.log.debug('rename')
+        self.log.info('rename')
         name = self.get_data(message, 'name', 'get.event.name')
 
         while True:
