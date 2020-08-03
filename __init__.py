@@ -181,7 +181,7 @@ class Appointment(MycroftSkill):
         self.speak('changed name to {}'.format(new_name))
 
     @intent_file_handler('day_appointment.intent')
-    def handle_appointment_day(self, message):
+    def handle_appointment_list_day(self, message):
         """
 
 
@@ -193,8 +193,8 @@ class Appointment(MycroftSkill):
             None
         """
 
-        self.log.debug('day')
-        start_date = self.get_time('new.event.date', datetime.now(), message.data['utterance'])
+        self.log.info('day')
+        start_date = self.get_time('get.event.date', datetime.now(), message.data['utterance'])
         if not start_date:
             start_date = self.get_time('new.event.time', datetime.now())
         events = self.get_events_day(start_date, start_date.date() + timedelta(days=1))
@@ -203,7 +203,6 @@ class Appointment(MycroftSkill):
                               data={'name': event.summary.value,
                                     'start': event.dtstart.value.strftime('%D, %H:%M'),
                                     'end': event.dtend.value.strftime('%D, %H:%M')})
-        self.speak()
 
     def get_data(self, message, data: str, dialog: str) -> str:
         """
