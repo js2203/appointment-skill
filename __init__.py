@@ -109,7 +109,7 @@ class Appointment(MycroftSkill):
         self.log.debug('create')
         name = self.get_data(message, 'name', 'get.event.name')
 
-        start_date = self.get_time('new.event.date', datetime.now(), message.data.get['utterance'])
+        start_date = self.get_time('new.event.date', datetime.now(), message.data['utterance'])
 
         if start_date.time() == time(0):
             all_day = self.ask_yesno('new.event.allday')
@@ -194,7 +194,7 @@ class Appointment(MycroftSkill):
         """
 
         self.log.debug('day')
-        start_date = self.get_time('new.event.date', datetime.now(), message.data.get['utterance'])
+        start_date = self.get_time('new.event.date', datetime.now(), message.data['utterance'])
         if not start_date:
             start_date = self.get_time('new.event.time', datetime.now())
         events = self.get_events_day(start_date)
