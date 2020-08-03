@@ -83,7 +83,7 @@ class Appointment(MycroftSkill):
                 # only add an event if it occurs at an later time than the query
                 # not including already running events
                 if event_instance.dtstart.value.strftime('%D, %H:%M') \
-                        > self.today.strftime('%D, %H:%M'):
+                        > datetime.today().strftime('%D, %H:%M'):
                     event_array.append(event_instance)
             # sort the events, because they are separated
             # in allday and normal events at first
@@ -114,7 +114,7 @@ class Appointment(MycroftSkill):
         if start_date.time() == time(0):
             all_day = self.ask_yesno('new.event.allday')
             if all_day == 'yes':
-                end_date = (start_date + timedelta(days=1))
+                end_date = start_date + timedelta(days=1)
             else:
                 start_time = self.get_time('new.event.time', datetime.now())
                 start_date = datetime.combine(start_date.date(), start_time.time())
@@ -151,7 +151,7 @@ class Appointment(MycroftSkill):
             target_event = self.get_event_by_name(name, datetime.now())
             target_event.delete()
             self.speak('deleted the event {}'.format(name))
-        except ValueError:
+        except AttributeError:
             self.speak('could not find the event')
 
     @intent_file_handler('rename_appointment.intent')
@@ -197,7 +197,7 @@ class Appointment(MycroftSkill):
         start_date = self.get_time('new.event.date', datetime.now(), message.data['utterance'])
         if not start_date:
             start_date = self.get_time('new.event.time', datetime.now())
-        events = self.get_events_day(start_date)
+        events = self.get_events_day(start_date, start_date.date() + timedelta(days=1))
         for event in events:
             self.speak_dialog('list.event',
                               data={'name': event.summary.value,
@@ -256,7 +256,7 @@ class Appointment(MycroftSkill):
                 pass
         return spoken_date
 
-    def get_events_day(self, search_date: datetime) -> list:
+    def get_events_day(self, search_date: datetime, end=None) -> list:
         """Returns all events in a calendar on a specifc day.
 
         Retrieves all events on a given date in the calendar
@@ -267,6 +267,7 @@ class Appointment(MycroftSkill):
             search_date:
                 date as datetime object for which all events should
                 be returned.
+            end:
         Returns:
             all_events:
                 list with all events on the given date as vevent objects.
@@ -274,7 +275,7 @@ class Appointment(MycroftSkill):
         calendar = None
         if len(self.calendars) > 0:
             calendar = self.calendars[0]
-        events = calendar.date_search(search_date)
+        events = calendar.date_search(search_date, end)
         all_events = []
         for event in events:
             event.load()
