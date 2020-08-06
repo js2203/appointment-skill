@@ -119,6 +119,7 @@ class Appointment(MycroftSkill):
         start_date = self.get_time('new.event.date',
                                    datetime.now(),
                                    message.data['utterance'])
+        # if the time is 00:00, check if the user forgot to give a time
         if start_date.time() == time(0):
             all_day = self.ask_yesno('new.event.allday')
             if all_day == 'yes':
@@ -133,6 +134,7 @@ class Appointment(MycroftSkill):
             end_date = self.get_time('new.event.end', start_date)
         if len(self.calendars) > 0:
             calendar = self.calendars[0]
+            # builds correct iCal string serialization 
             cal = vobject.iCalendar()
             cal.add('vevent')
             cal.vevent.add('summary').value = str(name)
@@ -170,7 +172,8 @@ class Appointment(MycroftSkill):
                 target_event.delete()
                 self.speak('deleted the event {}'.format(name))
         except AttributeError:
-            self.speak('could not find the event')
+            self.speak_dialog('get.event.not.found',
+                              data={'name': name})
 
     @intent_file_handler('rename_appointment.intent')
     def handle_appointment_rename(self, message):
@@ -190,19 +193,20 @@ class Appointment(MycroftSkill):
         """
         self.log.info('rename')
         name = self.get_data(message, 'name', 'get.event.name')
-        while True:
-            new_name = self.get_data(message, 'new_name', 'new.event.name')
-            name_correct = self.ask_yesno('new.event.name.correct',
-                                          data={'name': new_name})
-            if name_correct == 'yes':
-                break
         try:
             target_event = self.get_event_by_name(name, datetime.now())
+            while True:
+                new_name = self.get_data(message, 'new_name', 'new.event.name')
+                name_correct = self.ask_yesno('new.event.name.correct',
+                                              data={'name': new_name})
+                if name_correct == 'yes':
+                    break
             target_event.instance.vevent.summary.value = new_name
             target_event.save()
             self.speak('changed name to {}'.format(new_name))
         except AttributeError:
-            self.speak('could not find the event')
+            self.speak_dialog('get.event.not.found',
+                              data={'name': name})
 
     @intent_file_handler('day_appointment.intent')
     def handle_appointment_list_day(self, message):
