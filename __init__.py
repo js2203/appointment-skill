@@ -170,7 +170,7 @@ class Appointment(MycroftSkill):
                     check_name = event.load().instance.vevent.summary.value
                     check_date = event.load().instance.vevent.dtstart.value
                     check_date = check_date.strftime('%D, %H:%M')
-                    name_correct = self.ask_yesno('new.event.name.correct',
+                    name_correct = self.ask_yesno('get.event.name.correct',
                                                   data={'name': check_name,
                                                         'date': check_date})
                     if name_correct == 'yes':
@@ -210,6 +210,7 @@ class Appointment(MycroftSkill):
                 for event in target_events:
                     check_name = event.instance.vevent.summary.value
                     check_date = event.instance.vevent.dtstart.value
+                    check_date = check_date.strftime('%D, %H:%M')
                     event_correct = self.ask_yesno('get.event.name.correct',
                                                    data={'name': check_name,
                                                          'date': check_date})
