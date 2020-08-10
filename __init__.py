@@ -64,7 +64,7 @@ class Appointment(MycroftSkill):
         self.principal = self.client.principal()
         self.calendars = self.principal.calendars()
 
-    @intent_file_handler('next_appointment.intent')
+    @intent_file_handler('next_event.intent')
     def handle_appointment_next(self):
         """Tells the user the next appointment in the calendar.
 
@@ -94,12 +94,12 @@ class Appointment(MycroftSkill):
             event_array.sort(key=self.sort_events)
         # the first event in the array is the next occurring
         event_data = self.handle_event(event_array[0])
-        self.speak_dialog('next.appointment',
+        self.speak_dialog('next.event',
                           data={'date': event_data['event_time'],
                                 'summary': event_data['event_summary'],
                                 'location': event_data['event_location']})
 
-    @intent_file_handler('create_appointment.intent')
+    @intent_file_handler('create_event.intent')
     def handle_appointment_create(self, message):
         """Creates a new event/ appointment in the calendar.
 
@@ -132,20 +132,19 @@ class Appointment(MycroftSkill):
                 end_date = self.get_time('new.event.end', start_date)
         else:
             end_date = self.get_time('new.event.end', start_date)
-        if len(self.calendars) > 0:
-            calendar = self.calendars[0]
-            # builds correct iCal string serialization 
-            cal = vobject.iCalendar()
-            cal.add('vevent')
-            cal.vevent.add('summary').value = str(name)
-            cal.vevent.add('dtstart').value = start_date
-            cal.vevent.add('dtend').value = end_date
-            calendar.add_event(str(cal.serialize()))
-        self.speak('Created {} from {} till {}'.format(name,
-                                                       start_date,
-                                                       end_date))
+        calendar = self.calendars[0]
+        # builds correct iCal string serialization
+        cal = vobject.iCalendar()
+        cal.add('vevent')
+        cal.vevent.add('summary').value = str(name)
+        cal.vevent.add('dtstart').value = start_date
+        cal.vevent.add('dtend').value = end_date
+        calendar.add_event(str(cal.serialize()))
+        self.speak_dialog('new.event.create', data={'name': name,
+                                                    'start': start_date,
+                                                    'end': end_date})
 
-    @intent_file_handler('delete_appointment.intent')
+    @intent_file_handler('delete_event.intent')
     def handle_appointment_delete(self, message):
         """deletes a calendar entry from the calendar
 
@@ -175,7 +174,7 @@ class Appointment(MycroftSkill):
             self.speak_dialog('get.event.not.found',
                               data={'name': name})
 
-    @intent_file_handler('rename_appointment.intent')
+    @intent_file_handler('rename_event.intent')
     def handle_appointment_rename(self, message):
         """Changes the name of an existing event to a new one
 
@@ -203,12 +202,13 @@ class Appointment(MycroftSkill):
                     break
             target_event.instance.vevent.summary.value = new_name
             target_event.save()
-            self.speak('changed name to {}'.format(new_name))
+            self.speak_dialog('get.event.name.change',
+                              data={'name_old': name, 'name_new': new_name})
         except AttributeError:
             self.speak_dialog('get.event.not.found',
                               data={'name': name})
 
-    @intent_file_handler('day_appointment.intent')
+    @intent_file_handler('day_event.intent')
     def handle_appointment_list_day(self, message):
         """list all events/ appointments on a specific day
 
@@ -227,7 +227,7 @@ class Appointment(MycroftSkill):
                                    message.data['utterance'])
         if not start_date:
             start_date = self.get_time('new.event.time', datetime.now())
-        events = self.get_events_day(start_date,
+        events = self.get_events_day(start_date.date(),
                                      start_date.date() + timedelta(days=1))
         for event in events:
             summary = event.summary.value
