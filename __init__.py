@@ -140,9 +140,10 @@ class Appointment(MycroftSkill):
         cal.vevent.add('dtstart').value = start_date
         cal.vevent.add('dtend').value = end_date
         calendar.add_event(str(cal.serialize()))
-        self.speak_dialog('new.event.create', data={'name': name,
-                                                    'start': start_date,
-                                                    'end': end_date})
+        self.speak_dialog('new.event.create',
+                          data={'name': name,
+                                'start': start_date.strftime('%D, %H:%M'),
+                                'end': end_date.strftime('%D, %H:%M')})
 
     @intent_file_handler('delete_event.intent')
     def handle_appointment_delete(self, message):
@@ -237,6 +238,8 @@ class Appointment(MycroftSkill):
                               data={'name': summary,
                                     'start': start,
                                     'end': end})
+        if not events:
+            self.speak_dialog('get.event.not.found.day')
 
     def get_data(self, message, data: str, dialog: str) -> str:
         """retrieves information from the user.

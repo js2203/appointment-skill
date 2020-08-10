@@ -2,5 +2,6 @@
 (Create | Make) a new (appointment | event).
 (Create | Make) an (appointment | event).
 (Create | Make) a new (appointment | event) for me called {name}.
+(Create | Make) a new (appointment | event) called {name} at.
 (Create | Make) a new (appointment | event) called {name}.
 (Create | Make) an (appointment | event) called {name}.
