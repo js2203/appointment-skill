@@ -348,7 +348,7 @@ class Appointment(MycroftSkill):
         calendar = None
         if len(self.calendars) > 0:
             calendar = self.calendars[0]
-        events = calendar.date_search(search_date.date(), end)
+        events = calendar.date_search(search_date, end)
         all_events = []
         for event in events:
             event.load()
