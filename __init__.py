@@ -282,7 +282,7 @@ class Appointment(MycroftSkill):
         spoken_date = None
         try:
             spoken_date = extract_datetime(message, start, self.lang)
-        except AttributeError:
+        except TypeError:
             pass
         while spoken_date is None:
             try:
