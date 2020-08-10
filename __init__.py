@@ -286,6 +286,8 @@ class Appointment(MycroftSkill):
             pass
         except ValueError:
             pass
+        except AttributeError:
+            pass
         while spoken_date is None:
             try:
                 utterance = self.get_response(dialog)
