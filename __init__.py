@@ -166,6 +166,7 @@ class Appointment(MycroftSkill):
         try:
             target_events = self.get_event_by_name(name, datetime.now())
             if target_events:
+                target_events.sort(key=self.sort_events)
                 for event in target_events:
                     check_name = event.load().instance.vevent.summary.value
                     check_date = event.load().instance.vevent.dtstart.value
@@ -207,6 +208,7 @@ class Appointment(MycroftSkill):
         try:
             target_events = self.get_event_by_name(name, datetime.now())
             if target_events:
+                target_events.sort(key=self.sort_events)
                 for event in target_events:
                     check_name = event.instance.vevent.summary.value
                     check_date = event.instance.vevent.dtstart.value
