@@ -116,7 +116,7 @@ class Appointment(MycroftSkill):
         """
         self.log.info('create')
         name = self.get_data(message, 'name', 'get.event.name')
-        start_date = self.get_time('new.event.date',
+        start_date = self.get_time('new.event.startdate',
                                    datetime.now(),
                                    message.data['utterance'])
         # if the time is 00:00, check if the user forgot to give a time
@@ -129,9 +129,9 @@ class Appointment(MycroftSkill):
                                            datetime.now())
                 start_date = datetime.combine(start_date.date(),
                                               start_time.time())
-                end_date = self.get_time('new.event.end', start_date)
+                end_date = self.get_time('new.event.duration', start_date)
         else:
-            end_date = self.get_time('new.event.end', start_date)
+            end_date = self.get_time('new.event.duration', start_date)
         calendar = self.calendars[0]
         # builds correct iCal string serialization
         cal = vobject.iCalendar()
