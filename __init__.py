@@ -281,7 +281,7 @@ class Appointment(MycroftSkill):
         """
         spoken_date = None
         try:
-            spoken_date = extract_datetime(message, start, self.lang)
+            spoken_date, rest = extract_datetime(message, start, self.lang)
         except TypeError:
             pass
         except ValueError:
