@@ -34,8 +34,58 @@ Um eine Verbindung zu einem Kalender herstellen zu können, benötigt es eine UR
 ### Nächsten Termin abfragen
 
 Mit z.B. dem Intent "What's my next appointment" lässt sich der zeitlich nächste Kalendereintrag abfragen.  
-Die Funktion sucht dabei alle Einträge in dem Kalender zwischen dem jetzigen Zeitpunkt und der Zukunft, weil es unbekannt ist, wann der nächste Eintrag ist. Dabei werden zusätzlich bereits stattfindende Einträge ignoriert. Die Liste an Einträgen, die man dadurch erhält, muss erneut nach Startzeitpunkt sortiert werden, weil es sonst eine Trennung zwischen Ganztägigen und normalen Einträgen gibt.  
-Nach der Sortierung wird der zeitlich nähste Eintrag von Mycroft in einem Dialog ausgegeben.
+Die Funktion sucht dabei alle Einträge in dem Kalender zwischen dem jetzigen Zeitpunkt und der Zukunft, weil es unbekannt ist, wann der nächste Eintrag ist.  
+Code hierfür: 
+```python
+calendar.date_search(datetime.now(), end=None)
+```  
+Anschließend werden die gefundenen Einträge durchiteriert und dabei werden zusätzlich bereits stattfindende Einträge ignoriert.  
+Code hierfür: 
+```python
+if event_instance.dtstart.value.strftime('%D, %H:%M') > datetime.today().strftime('%D, %H:%M'):
+    event_array.append(event_instance)
+```  
+Die Liste an Einträgen, die man dadurch erhält, muss erneut nach Startzeitpunkt sortiert werden, weil es sonst eine Trennung zwischen Ganztägigen und normalen Einträgen gibt. Das bedeutet, dass in der Liste erst alle normalen Event gelistet sind, und danach die Ganztätigen, unabhängig vom Startzeitpunkt.   
+Code hierfür: 
+```python
+event_array.sort(key=self.sort_events)
+```  
+Nach der Sortierung werden die Daten des zeitlich nähste Eintrag verarbeitet. Das geschieht in der Methode 
+```python
+def handle_event(event)
+```  
+In dieser Methode wird zunächst der Ort des Events gefilert, falls einer vorhanden ist. Ansonsten wird dieser als "Unknown" gekennzeichnet.  
+Code hierfür: 
+```python
+try:
+    event_location = event.location.value
+except AttributeError:
+    event_location = 'Unknown'
+event_summary = event.summary.value
+```  
+In der gleichen Art und Weise wird ebenfalls das Start- und Enddatum extrahiert. Zusätzlich wird hier aber direkt ein passender String erstellt, welcher das Datum als normales oder ganztägiges Event kennzeichnet.  
+```python
+if event.dtstart.value.strftime('%H:%M') == '00:00' \
+                and event.dtend.value.strftime('%H:%M') == '00:00':
+            day = event.dtstart.value.strftime('%d %B, %Y')
+            event_time = ('an allday event at {}'.format(day))
+else:
+    event_start = event.dtstart.value.strftime('%H:%M, %D')
+    event_end = event.dtend.value.strftime('%H:%M, %D')
+    event_time = ('a normal event from {} to {}'.format(event_start,
+                                                        event_end))
+```
+Das resultierende Dictionary mit den relevanten Informationen,  
+```python
+{'event_time': event_time, 'event_summary': event_summary, 'event_location': event_location}
+```
+ wird mithilfe eines Mycroft-Dialoges and den User ausgegeben.
+```python
+self.speak_dialog('next.event',
+                  data={'date': event_data['event_time'],
+                        'summary': event_data['event_summary'],
+                        'location': event_data['event_location']})
+```
 
 ### Termin erstellen
 

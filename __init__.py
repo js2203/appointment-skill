@@ -164,13 +164,24 @@ class Appointment(MycroftSkill):
         self.log.info('delete')
         name = self.get_data(message, 'name', 'get.event.name')
         try:
-            target_event = self.get_event_by_name(name, datetime.now())
-            target_name = target_event.load().instance.vevent.summary.value
-            name_correct = self.ask_yesno('new.event.name.correct',
-                                          data={'name': target_name})
-            if name_correct == 'yes':
-                target_event.delete()
-                self.speak('deleted the event {}'.format(name))
+            target_events = self.get_event_by_name(name, datetime.now())
+            if target_events:
+                for event in target_events:
+                    check_name = event.load().instance.vevent.summary.value
+                    check_date = event.load().instance.vevent.dtstart.value
+                    target_date = target_date.strftime('%D, %H:%M')
+                    name_correct = self.ask_yesno('new.event.name.correct',
+                                                  data={'name': check_name,
+                                                        'date': check_date})
+                    if name_correct == 'yes':
+                        event.delete()
+                        self.speak('deleted the event {}'.format(name))
+                        break
+                    if target_events.index(event) == len(target_events)-1:
+                        self.speak('No more events with that name')
+            else:
+                self.speak_dialog('get.event.not.found',
+                                  data={'name': name})
         except AttributeError:
             self.speak_dialog('get.event.not.found',
                               data={'name': name})
@@ -194,17 +205,33 @@ class Appointment(MycroftSkill):
         self.log.info('rename')
         name = self.get_data(message, 'name', 'get.event.name')
         try:
-            target_event = self.get_event_by_name(name, datetime.now())
-            while True:
-                new_name = self.get_data(message, 'new_name', 'new.event.name')
-                name_correct = self.ask_yesno('new.event.name.correct',
-                                              data={'name': new_name})
-                if name_correct == 'yes':
-                    break
-            target_event.instance.vevent.summary.value = new_name
-            target_event.save()
-            self.speak_dialog('get.event.name.change',
-                              data={'name_old': name, 'name_new': new_name})
+            target_events = self.get_event_by_name(name, datetime.now())
+            if target_events:
+                for event in target_events:
+                    check_name = event.instance.vevent.summary.value
+                    check_date = event.instance.vevent.dtstart.value
+                    event_correct = self.ask_yesno('get.event.name.correct',
+                                                   data={'name': check_name,
+                                                         'date': check_date})
+                    if event_correct == 'yes':
+                        while True:
+                            new_name = self.get_data(message, 'new_name',
+                                                     'new.event.name')
+                            correct = self.ask_yesno('new.event.name.correct',
+                                                     data={'name': new_name})
+                            if correct == 'yes':
+                                break
+                        event.instance.vevent.summary.value = new_name
+                        event.save()
+                        self.speak_dialog('get.event.name.change',
+                                          data={'name_old': name,
+                                                'name_new': new_name})
+                        break
+                    if target_events.index(event) == len(target_events)-1:
+                        self.speak('No more events with that name')
+            else:
+                self.speak_dialog('get.event.not.found',
+                                  data={'name': name})
         except AttributeError:
             self.speak_dialog('get.event.not.found',
                               data={'name': name})
@@ -320,7 +347,7 @@ class Appointment(MycroftSkill):
         calendar = None
         if len(self.calendars) > 0:
             calendar = self.calendars[0]
-        events = calendar.date_search(search_date, end)
+        events = calendar.date_search(search_date.date(), end)
         all_events = []
         for event in events:
             event.load()
@@ -328,7 +355,7 @@ class Appointment(MycroftSkill):
         return all_events
 
     def get_event_by_name(self, name: str, search_date: datetime,
-                          calendar=None):
+                          calendar=None) -> list:
         """searches for a specific event by name.
 
         Iterates through all events in the calendar until
@@ -350,12 +377,14 @@ class Appointment(MycroftSkill):
         if len(self.calendars) > 0:
             calendar = self.calendars[0]
         events = calendar.date_search(search_date)
+        event_list = []
         for event in events:
             event.load()
             event_instance = event.instance.vevent
             summary: str = event_instance.summary.value
             if summary.lower() == name.lower():
-                return event
+                event_list.append(event)
+        return event_list
 
     @staticmethod
     def handle_event(event):
